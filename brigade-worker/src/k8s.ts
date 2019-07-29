@@ -46,7 +46,7 @@ const wrapClient = fns => {
   // wrap client methods with retry logic
   for (let fn of fns) {
     let originalFn = defaultClient[fn.name];
-    defaultClient[fn.name] = function () {
+    defaultClient[fn.name] = function() {
       return retry(originalFn, arguments, 4000, 5);
     };
   }
@@ -248,7 +248,7 @@ export class JobRunner implements jobs.JobRunner {
   cancel: boolean;
   reconnect: boolean;
 
-  constructor() { }
+  constructor() {}
 
   /**
    * init takes a generic so we can run this against mocks as well as against the real Job type.
@@ -257,7 +257,12 @@ export class JobRunner implements jobs.JobRunner {
    * @param project  The project in which this job runs
    * @param allowSecretKeyRef  Allow secretKeyRef in the job's environment
    */
-  public init<T extends jobs.Job>(job: T, e: BrigadeEvent, project: Project, allowSecretKeyRef: boolean = true) {
+  public init<T extends jobs.Job>(
+    job: T,
+    e: BrigadeEvent,
+    project: Project,
+    allowSecretKeyRef: boolean = true
+  ) {
     this.options = Object.assign({}, options);
     this.event = e;
     this.logger = new ContextLogger("k8s", e.logLevel);
@@ -332,8 +337,10 @@ export class JobRunner implements jobs.JobRunner {
 
         if (val.secretKeyRef != null && !allowSecretKeyRef) {
           // allowSecretKeyRef is not to true so disallow setting secrets in the environment
-          this.logger.warn(`Using secretKeyRef is not allowed in this project, not setting environment variable ${key}`);
-          continue
+          this.logger.warn(
+            `Using secretKeyRef is not allowed in this project, not setting environment variable ${key}`
+          );
+          continue;
         }
 
         envVars.push({
@@ -356,7 +363,11 @@ export class JobRunner implements jobs.JobRunner {
     ];
 
     this.runner.spec.initContainers = [];
-    if (job.useSource && project.repo.cloneURL && project.kubernetes.vcsSidecar) {
+    if (
+      job.useSource &&
+      project.repo.cloneURL &&
+      project.kubernetes.vcsSidecar
+    ) {
       // Add the sidecar.
       let sidecar = sidecarSpec(
         e,
@@ -367,12 +378,14 @@ export class JobRunner implements jobs.JobRunner {
       this.runner.spec.initContainers = [sidecar];
 
       // Add volume/volume mounts
-      this.runner.spec.volumes.push(
-        { name: "vcs-sidecar", emptyDir: {} } as kubernetes.V1Volume
-      );
-      this.runner.spec.containers[0].volumeMounts.push(
-        { name: "vcs-sidecar", mountPath: mountPath } as kubernetes.V1VolumeMount
-      );
+      this.runner.spec.volumes.push({
+        name: "vcs-sidecar",
+        emptyDir: {}
+      } as kubernetes.V1Volume);
+      this.runner.spec.containers[0].volumeMounts.push({
+        name: "vcs-sidecar",
+        mountPath: mountPath
+      } as kubernetes.V1VolumeMount);
     }
 
     if (job.imagePullSecrets) {
@@ -471,7 +484,7 @@ export class JobRunner implements jobs.JobRunner {
     // appended to job name.
     return `${this.project.name.replace(/[.\/]/g, "-")}-${
       this.job.name
-      }`.toLowerCase();
+    }`.toLowerCase();
   }
 
   public logs(): Promise<string> {
@@ -573,7 +586,7 @@ export class JobRunner implements jobs.JobRunner {
   private startUpdatingPod(): request.Request {
     const url = `${kc.getCurrentCluster().server}/api/v1/namespaces/${
       this.project.kubernetes.namespace
-      }/pods`;
+    }/pods`;
     const requestOptions = {
       qs: {
         watch: true,
@@ -595,7 +608,7 @@ export class JobRunner implements jobs.JobRunner {
         } else {
           obj = JSON.parse(data);
         }
-      } catch (e) { } //let it stay connected.
+      } catch (e) {} //let it stay connected.
       if (obj && obj.object) {
         this.pod = obj.object as kubernetes.V1Pod;
       }
@@ -669,7 +682,10 @@ export class JobRunner implements jobs.JobRunner {
         else if (phase == "Running") {
           // do that only if we haven't hooked up the follow request before
           if (followLogsRequest == null && this.job.streamLogs) {
-            followLogsRequest = followLogs(this.pod.metadata.namespace, this.pod.metadata.name);
+            followLogsRequest = followLogs(
+              this.pod.metadata.namespace,
+              this.pod.metadata.name
+            );
           }
         } else if (phase == "Failed") {
           clearTimers();
@@ -692,9 +708,16 @@ export class JobRunner implements jobs.JobRunner {
             reject(new Error(cs[0].state.waiting.message));
           }
         }
-        if (!this.job.streamLogs || (this.job.streamLogs && this.pod.status.phase != "Running")) {
+        if (
+          !this.job.streamLogs ||
+          (this.job.streamLogs && this.pod.status.phase != "Running")
+        ) {
           // don't display "Running" when we're asked to display job Pod logs
-          this.logger.log(`${this.pod.metadata.namespace}/${this.pod.metadata.name} phase ${this.pod.status.phase}`);
+          this.logger.log(
+            `${this.pod.metadata.namespace}/${this.pod.metadata.name} phase ${
+              this.pod.status.phase
+            }`
+          );
         }
         // In all other cases we fall through and let the fn be run again.
       };
@@ -717,13 +740,18 @@ export class JobRunner implements jobs.JobRunner {
       };
 
       // follows logs for the specified namespace/Pod combination
-      let followLogs = (namespace: string, podName: string): request.Request => {
-        const url = `${kc.getCurrentCluster().server}/api/v1/namespaces/${namespace}/pods/${podName}/log`;
+      let followLogs = (
+        namespace: string,
+        podName: string
+      ): request.Request => {
+        const url = `${
+          kc.getCurrentCluster().server
+        }/api/v1/namespaces/${namespace}/pods/${podName}/log`;
         //https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#pod-v1-core
         const requestOptions = {
           qs: {
             follow: true,
-            timeoutSeconds: 200,
+            timeoutSeconds: 200
           },
           method: "GET",
           uri: url,
@@ -740,9 +768,11 @@ export class JobRunner implements jobs.JobRunner {
               logs = data;
             }
             this.logger.log(
-              `${this.pod.metadata.namespace}/${this.pod.metadata.name} logs ${logs}`
+              `${this.pod.metadata.namespace}/${
+                this.pod.metadata.name
+              } logs ${logs}`
             );
-          } catch (e) { } //let it stay connected.
+          } catch (e) {} //let it stay connected.
         });
         const req = request(requestOptions, (error, response, body) => {
           if (error) {
@@ -752,8 +782,7 @@ export class JobRunner implements jobs.JobRunner {
         });
         req.pipe(stream);
         return req;
-      }
-
+      };
     });
 
     // This will fail if the timelimit is reached.
@@ -1026,12 +1055,12 @@ export function secretToProject(
     // For legacy/backwards-compatibility reasons,
     // we set project name and repo name to the following values,
     // despite the fact that they should logically be swapped.
-    p.name = b64dec(secret.data.repository)
+    p.name = b64dec(secret.data.repository);
     p.repo = {
       name: secret.metadata.annotations["projectName"],
       cloneURL: null,
       initGitSubmodules: false
-    }
+    };
   }
   if (secret.data.vcsSidecar) {
     p.kubernetes.vcsSidecar = b64dec(secret.data.vcsSidecar);

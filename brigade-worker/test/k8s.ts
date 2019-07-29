@@ -4,7 +4,12 @@ import * as mock from "./mock";
 
 import * as k8s from "../src/k8s";
 import { BrigadeEvent, Project } from "@brigadecore/brigadier/out/events";
-import { Job, Result, brigadeCachePath, brigadeStoragePath } from "@brigadecore/brigadier/out/job";
+import {
+  Job,
+  Result,
+  brigadeCachePath,
+  brigadeStoragePath
+} from "@brigadecore/brigadier/out/job";
 
 import * as kubernetes from "@kubernetes/client-node";
 
@@ -76,7 +81,7 @@ describe("k8s", function() {
       );
       assert.equal(p.name, "noVCSProject");
       assert.equal(p.repo, undefined);
-      assert.equal(s.data["genericGatewaySecret"], "SThkQ1g=") // Project class does not contain genericGatewaySecret field - this is because we do not want to expose the genericGatewaySecret to any job
+      assert.equal(s.data["genericGatewaySecret"], "SThkQ1g="); // Project class does not contain genericGatewaySecret field - this is because we do not want to expose the genericGatewaySecret to any job
       assert.equal(p.kubernetes.namespace, "default");
       assert.equal(p.kubernetes.vcsSidecar, "");
       assert.property(p.secrets, "hello");
@@ -323,17 +328,17 @@ describe("k8s", function() {
         });
         it("job runner should have no sidecar volumes", function() {
           let jr = new k8s.JobRunner().init(j, e, p);
-          assert.notDeepInclude(
-            jr.runner.spec.volumes,
-            { name: "vcs-sidecar", emptyDir: {} } as kubernetes.V1Volume
-          );
+          assert.notDeepInclude(jr.runner.spec.volumes, {
+            name: "vcs-sidecar",
+            emptyDir: {}
+          } as kubernetes.V1Volume);
         });
         it("job runner should have no sidecar volume mounts", function() {
           let jr = new k8s.JobRunner().init(j, e, p);
-          assert.notDeepInclude(
-            jr.runner.spec.containers[0].volumeMounts,
-            { name: "vcs-sidecar", mountPath: j.mountPath } as kubernetes.V1VolumeMount
-          );
+          assert.notDeepInclude(jr.runner.spec.containers[0].volumeMounts, {
+            name: "vcs-sidecar",
+            mountPath: j.mountPath
+          } as kubernetes.V1VolumeMount);
         });
       });
       context("when mount path is supplied", function() {
@@ -563,16 +568,22 @@ describe("k8s", function() {
       context("when no job shell is specified", function() {
         it("default shell is /bin/sh", function() {
           let jr = new k8s.JobRunner().init(j, e, p);
-          assert.deepEqual(jr.runner.spec.containers[0].command, [ '/bin/sh', '/hook/main.sh' ]);
+          assert.deepEqual(jr.runner.spec.containers[0].command, [
+            "/bin/sh",
+            "/hook/main.sh"
+          ]);
         });
       });
       context("when job shell is specified", function() {
         beforeEach(function() {
-          j.shell = "/bin/bash"
+          j.shell = "/bin/bash";
         });
         it("shell is /bin/bash", function() {
           let jr = new k8s.JobRunner().init(j, e, p);
-          assert.deepEqual(jr.runner.spec.containers[0].command, [ '/bin/bash', '/hook/main.sh' ]);
+          assert.deepEqual(jr.runner.spec.containers[0].command, [
+            "/bin/bash",
+            "/hook/main.sh"
+          ]);
         });
       });
     });
@@ -588,49 +599,73 @@ describe("k8s", function() {
         beforeEach(function() {
           jr.options.defaultCacheStorageClass = "foo";
         });
-        context("when the cache storage class is overridden at the project level", () => {
-          beforeEach(function() {
-            jr.project.kubernetes.cacheStorageClass = "bar";
-          });
-          it("it uses that", () => {
-            let pvc = jr['cachePVC']()
-            assert.equal(pvc.spec.storageClassName, jr.project.kubernetes.cacheStorageClass)
-          });
-        });
-        context("when the cache storage class is not overridden at the project level", () => {
-          beforeEach(function() {
-            jr.project.kubernetes.cacheStorageClass = "";
-          });
-          it("it falls back on the global default", () => {
-            let pvc = jr['cachePVC']()
-            assert.equal(pvc.spec.storageClassName, jr.options.defaultCacheStorageClass)
-          });
-        });
+        context(
+          "when the cache storage class is overridden at the project level",
+          () => {
+            beforeEach(function() {
+              jr.project.kubernetes.cacheStorageClass = "bar";
+            });
+            it("it uses that", () => {
+              let pvc = jr["cachePVC"]();
+              assert.equal(
+                pvc.spec.storageClassName,
+                jr.project.kubernetes.cacheStorageClass
+              );
+            });
+          }
+        );
+        context(
+          "when the cache storage class is not overridden at the project level",
+          () => {
+            beforeEach(function() {
+              jr.project.kubernetes.cacheStorageClass = "";
+            });
+            it("it falls back on the global default", () => {
+              let pvc = jr["cachePVC"]();
+              assert.equal(
+                pvc.spec.storageClassName,
+                jr.options.defaultCacheStorageClass
+              );
+            });
+          }
+        );
       });
-      context("when global default cache storage class is not specified", () => {
-        beforeEach(function() {
-          jr.options.defaultCacheStorageClass = "";
-        });
-        context("when the cache storage class is overridden at the project level", () => {
+      context(
+        "when global default cache storage class is not specified",
+        () => {
           beforeEach(function() {
-            jr.project.kubernetes.cacheStorageClass = "bar";
+            jr.options.defaultCacheStorageClass = "";
           });
-          it("it uses that", () => {
-            let pvc = jr['cachePVC']()
-            assert.equal(pvc.spec.storageClassName, jr.project.kubernetes.cacheStorageClass)
-          });
-        });
-        context("when the cache storage class is not overridden at the project level", () => {
-          beforeEach(function() {
-            jr.project.kubernetes.cacheStorageClass = "";
-          });
-          it("it falls back on the cluster default", () => {
-            let pvc = jr['cachePVC']()
-            // Undefined means k8s will use the cluster's default storage class
-            assert.isUndefined(pvc.spec.storageClassName);
-          });
-        });
-      });
+          context(
+            "when the cache storage class is overridden at the project level",
+            () => {
+              beforeEach(function() {
+                jr.project.kubernetes.cacheStorageClass = "bar";
+              });
+              it("it uses that", () => {
+                let pvc = jr["cachePVC"]();
+                assert.equal(
+                  pvc.spec.storageClassName,
+                  jr.project.kubernetes.cacheStorageClass
+                );
+              });
+            }
+          );
+          context(
+            "when the cache storage class is not overridden at the project level",
+            () => {
+              beforeEach(function() {
+                jr.project.kubernetes.cacheStorageClass = "";
+              });
+              it("it falls back on the cluster default", () => {
+                let pvc = jr["cachePVC"]();
+                // Undefined means k8s will use the cluster's default storage class
+                assert.isUndefined(pvc.spec.storageClassName);
+              });
+            }
+          );
+        }
+      );
     });
   });
 
@@ -645,49 +680,73 @@ describe("k8s", function() {
         beforeEach(function() {
           bs.options.defaultBuildStorageClass = "foo";
         });
-        context("when the build storage class is overridden at the project level", () => {
-          beforeEach(function() {
-            bs.proj.kubernetes.buildStorageClass = "bar";
-          });
-          it("it uses that", () => {
-            let pvc = bs['buildPVC']("10Gi");
-            assert.equal(pvc.spec.storageClassName, bs.proj.kubernetes.buildStorageClass)
-          });
-        });
-        context("when the build storage class is not overridden at the project level", () => {
-          beforeEach(function() {
-            bs.proj.kubernetes.buildStorageClass = "";
-          });
-          it("it falls back on the global default", () => {
-            let pvc = bs['buildPVC']("10Gi");
-            assert.equal(pvc.spec.storageClassName, bs.options.defaultBuildStorageClass)
-          });
-        });
+        context(
+          "when the build storage class is overridden at the project level",
+          () => {
+            beforeEach(function() {
+              bs.proj.kubernetes.buildStorageClass = "bar";
+            });
+            it("it uses that", () => {
+              let pvc = bs["buildPVC"]("10Gi");
+              assert.equal(
+                pvc.spec.storageClassName,
+                bs.proj.kubernetes.buildStorageClass
+              );
+            });
+          }
+        );
+        context(
+          "when the build storage class is not overridden at the project level",
+          () => {
+            beforeEach(function() {
+              bs.proj.kubernetes.buildStorageClass = "";
+            });
+            it("it falls back on the global default", () => {
+              let pvc = bs["buildPVC"]("10Gi");
+              assert.equal(
+                pvc.spec.storageClassName,
+                bs.options.defaultBuildStorageClass
+              );
+            });
+          }
+        );
       });
-      context("when global default build storage class is not specified", () => {
-        beforeEach(function() {
-          bs.options.defaultBuildStorageClass = "";
-        });
-        context("when the build storage class is overridden at the project level", () => {
+      context(
+        "when global default build storage class is not specified",
+        () => {
           beforeEach(function() {
-            bs.proj.kubernetes.buildStorageClass = "bar";
+            bs.options.defaultBuildStorageClass = "";
           });
-          it("it uses that", () => {
-            let pvc = bs['buildPVC']("10Gi");
-            assert.equal(pvc.spec.storageClassName, bs.proj.kubernetes.buildStorageClass)
-          });
-        });
-        context("when the build storage class is not overridden at the project level", () => {
-          beforeEach(function() {
-            bs.proj.kubernetes.buildStorageClass = "";
-          });
-          it("it falls back on the cluster default", () => {
-            let pvc = bs['buildPVC']("10Gi");
-            // Undefined means k8s will use the cluster's default storage class
-            assert.isUndefined(pvc.spec.storageClassName);
-          });
-        });
-      });
+          context(
+            "when the build storage class is overridden at the project level",
+            () => {
+              beforeEach(function() {
+                bs.proj.kubernetes.buildStorageClass = "bar";
+              });
+              it("it uses that", () => {
+                let pvc = bs["buildPVC"]("10Gi");
+                assert.equal(
+                  pvc.spec.storageClassName,
+                  bs.proj.kubernetes.buildStorageClass
+                );
+              });
+            }
+          );
+          context(
+            "when the build storage class is not overridden at the project level",
+            () => {
+              beforeEach(function() {
+                bs.proj.kubernetes.buildStorageClass = "";
+              });
+              it("it falls back on the cluster default", () => {
+                let pvc = bs["buildPVC"]("10Gi");
+                // Undefined means k8s will use the cluster's default storage class
+                assert.isUndefined(pvc.spec.storageClassName);
+              });
+            }
+          );
+        }
+      );
     });
   });
 });
@@ -696,7 +755,8 @@ function mockSecretVCS(): kubernetes.V1Secret {
   let s = new kubernetes.V1Secret();
   s.metadata = new kubernetes.V1ObjectMeta();
   s.data = {
-    cloneURL: "aHR0cHM6Ly9naXRodWIuY29tL2JyaWdhZGVjb3JlL2VtcHR5LXRlc3RiZWQuZ2l0",
+    cloneURL:
+      "aHR0cHM6Ly9naXRodWIuY29tL2JyaWdhZGVjb3JlL2VtcHR5LXRlc3RiZWQuZ2l0",
     initGitSubmodules: "dHJ1ZQ==",
     "github.token": "cHJldGVuZCBwYXNzd29yZAo=",
     repository: "Z2l0aHViLmNvbS9icmlnYWRlY29yZS90ZXN0LXByaXZhdGUtdGVzdGJlZA==",

@@ -52,12 +52,17 @@ export class Job extends jobImpl.Job {
   jr: JobRunner;
 
   run(): Promise<jobImpl.Result> {
-    this.jr = new JobRunner().init(this, currentEvent, currentProject, process.env.BRIGADE_SECRET_KEY_REF == 'true');
+    this.jr = new JobRunner().init(
+      this,
+      currentEvent,
+      currentProject,
+      process.env.BRIGADE_SECRET_KEY_REF == "true"
+    );
     this._podName = this.jr.name;
     return this.jr.run().catch(err => {
       // Wrap the message to give clear context.
       console.error(err);
-      let msg = `job ${ this.name }(${this.jr.name}): ${err}`;
+      let msg = `job ${this.name}(${this.jr.name}): ${err}`;
       return Promise.reject(new Error(msg));
     });
   }
@@ -66,7 +71,6 @@ export class Job extends jobImpl.Job {
     return this.jr.logs();
   }
 }
-
 
 /**
  * Group describes a collection of associated jobs.

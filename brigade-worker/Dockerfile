@@ -2,6 +2,6 @@ FROM node:8-alpine
 
 WORKDIR /home/src
 COPY brigade-worker/ /home/src/
-RUN yarn build
+RUN npm run-script build
 
-CMD yarn run test
+CMD npm test

@@ -66,8 +66,8 @@ export class MockJob extends Job {
         }, delay);
         return;
       }
-      resolve(new MockResult(this.name))
-      setTimeout(null, delay)
+      resolve(new MockResult(this.name));
+      setTimeout(null, delay);
     });
   }
   public logs(): Promise<string> {

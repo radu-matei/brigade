@@ -42,9 +42,9 @@ import { options } from "./k8s";
 
 // Install aliases for common ways of referring to Brigade/Brigadier.
 moduleAlias.addAliases({
-  "brigade": __dirname + "/brigadier",
-  "brigadier": __dirname + "/brigadier",
-  "@brigadecore/brigadier": __dirname + "/brigadier",
+  brigade: __dirname + "/brigadier",
+  brigadier: __dirname + "/brigadier",
+  "@brigadecore/brigadier": __dirname + "/brigadier"
 });
 // Add the current module resolution paths to module-alias, so the node_modules
 // that prestart.js adds to will be resolvable from the Brigade script and any
@@ -127,16 +127,22 @@ if (process.env.BRIGADE_SERVICE_ACCOUNT) {
 if (process.env.BRIGADE_SERVICE_ACCOUNT_REGEX) {
   let regex = RegExp(`${process.env.BRIGADE_SERVICE_ACCOUNT_REGEX}`);
   if (!regex.test(options.serviceAccount)) {
-      logger.log(`Service Account ${options.serviceAccount} does not match regex ${process.env.BRIGADE_SERVICE_ACCOUNT_REGEX}`);
-      process.exit(1);
+    logger.log(
+      `Service Account ${options.serviceAccount} does not match regex ${
+        process.env.BRIGADE_SERVICE_ACCOUNT_REGEX
+      }`
+    );
+    process.exit(1);
   }
 }
 
 if (process.env.BRIGADE_DEFAULT_BUILD_STORAGE_CLASS) {
-  options.defaultBuildStorageClass = process.env.BRIGADE_DEFAULT_BUILD_STORAGE_CLASS
+  options.defaultBuildStorageClass =
+    process.env.BRIGADE_DEFAULT_BUILD_STORAGE_CLASS;
 }
 if (process.env.BRIGADE_DEFAULT_CACHE_STORAGE_CLASS) {
-  options.defaultCacheStorageClass = process.env.BRIGADE_DEFAULT_CACHE_STORAGE_CLASS
+  options.defaultCacheStorageClass =
+    process.env.BRIGADE_DEFAULT_CACHE_STORAGE_CLASS;
 }
 
 // Run the app.
